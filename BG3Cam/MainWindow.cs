@@ -54,7 +54,7 @@ namespace BG3Cam
                 MessageBox.Show("Max Zoom not found", "Bad Game State");
                 Environment.Exit(0);
             }
-            maxZoomVal.Value = (decimal)25f;
+            maxZoomVal.Value = (decimal)100f;
             minZoomVal.Value = (decimal)0.5f;
             defaultZoomMin = mem.ReadProcessMemory<float>(obj + camOffset + camMaxOffset + 4);
             defaultMaxAbs = mem.ReadProcessMemory<float>(obj + camOffset + camMaxAbsOffset);
