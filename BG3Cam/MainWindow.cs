@@ -49,12 +49,13 @@ namespace BG3Cam
             camTiltOffset = mem.ReadProcessMemory<int>(camTilt + 5);
 
             var curMaxZoom = AddDefaultVal(obj + worldCamOffset + camMaxOffset); // default val is 12, addr offset is 0x7b4 in release patch
-            if (curMaxZoom == 12)
+            if (curMaxZoom != 12)
             {
-                MessageBox.Show("Max Zoom not found", "Bad Game State");
-                Environment.Exit(0);
+                var res = MessageBox.Show("Max Zoom not found, expected 12.0, found : " + curMaxZoom, "Bad Game State", MessageBoxButtons.AbortRetryIgnore);
+                if (res == DialogResult.Abort)
+                    Environment.Exit(0);
             }
-            maxZoomVal.Value = (decimal)17.5f;
+            maxZoomVal.Value = (decimal)20f;
             minZoomVal.Value = (decimal)0.5f;
             AddDefaultVal(obj + worldCamOffset + camMaxOffset + 4);
             AddDefaultVal(obj + battleCamOffset + camMaxOffset);
