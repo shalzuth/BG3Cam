@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SharpDX.XInput;
 
 namespace BG3Cam
 {
@@ -18,8 +19,14 @@ namespace BG3Cam
         Dictionary<nint, float> defaultVals = new Dictionary<nint, float>();
         int prevMouseY;
         float curTilt;
+
+        Controller controller;
+        Gamepad gamepad;
+
         void MainWindow_Load(object sender, EventArgs e)
         {
+            controller = new Controller(UserIndex.One);
+ 
             var bg3Proc = Process.GetProcesses().FirstOrDefault(p => p.ProcessName == "bg3" || p.ProcessName == "bg3_dx11");
             if (bg3Proc == null)
             {
@@ -98,22 +105,48 @@ namespace BG3Cam
         {
             while (running)
             {
+                var diff = 0;
+                var Mouse = false;
                 if (Hotkeys.SinglePress(Keys.MButton)) prevMouseY = Cursor.Position.Y;
-                if (Hotkeys.IsPressed(Keys.MButton))
+
+                if (Hotkeys.IsPressed(Keys.MButton) || Hotkeys.IsPressed(Keys.R))
                 {
-                    var diff = Cursor.Position.Y - prevMouseY;
-                    if (diff != 0)
+                    diff = Cursor.Position.Y - prevMouseY;
+                    Mouse = true;
+                }
+         
+                if (controller.IsConnected == true && controller.GetState().Gamepad.Buttons == GamepadButtonFlags.RightThumb)
+                {
+                    gamepad = controller.GetState().Gamepad;
+                    if (gamepad.RightThumbY > 4500 && gamepad.RightThumbY < 24000)
                     {
-                        curTilt += diff * 0.05f;
-                        mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset, curTilt);
-                        mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 4, curTilt);
-                        mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 8, curTilt);
-                        mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 12, curTilt);
-                        mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset, curTilt);
-                        mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset + 4, curTilt);
-                        mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset + 8, curTilt);
-                        mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset + 12, curTilt);
+                        diff = 15;
+                    }
+                    else if (gamepad.RightThumbY < -4500 && gamepad.RightThumbY > -24000)
+                    {
+                        diff = -15;
+                    }
+                }
+
+                if (diff != 0)
+                {
+                    curTilt += diff * 0.05f;
+                    mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset, curTilt);
+                    mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 4, curTilt);
+                    mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 8, curTilt);
+                    mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 12, curTilt);
+                    mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset, curTilt);
+                    mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset + 4, curTilt);
+                    mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset + 8, curTilt);
+                    mem.WriteProcessMemory(obj + battleCamOffset + camTiltOffset + 12, curTilt);
+                    if (Mouse == false)
+                    {
+                        prevMouseY = (int)curTilt;
+                    }
+                    else
+                    {
                         prevMouseY = Cursor.Position.Y;
+                        Mouse = false;
                     }
                 }
                 await Task.Delay(16);
