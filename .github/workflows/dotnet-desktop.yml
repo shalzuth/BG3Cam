@@ -24,4 +24,8 @@ jobs:
       with:
         name: BG3Cam
         path: BG3Cam/bin/Release/net7.0-windows/publish/win-x64/BG3Cam.exe
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: BG3Cam/bin/Release/net7.0-windows/publish/win-x64/BG3Cam.exe
 
