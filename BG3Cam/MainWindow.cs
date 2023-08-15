@@ -73,7 +73,6 @@ namespace BG3Cam
 
             AddDefaultVal(obj + battleCamOffset + camMaxOffset);
             AddDefaultVal(obj + battleCamOffset + camMaxOffset + 4);
-            AddDefaultVal(obj + worldCamOffset + camTiltSpeedOffset + 240);
             curTilt = AddDefaultVal(obj + worldCamOffset + camTiltOffset);
             AddDefaultVal(obj + worldCamOffset + camTiltOffset + 4);
             AddDefaultVal(obj + worldCamOffset + camTiltOffset + 8);
@@ -81,6 +80,7 @@ namespace BG3Cam
             AddDefaultVal(obj + battleCamOffset + camTiltOffset);
             AddDefaultVal(obj + battleCamOffset + camTiltOffset + 4);
             AddDefaultVal(obj + battleCamOffset + camTiltOffset + 8);
+            AddDefaultVal(obj + battleCamOffset + camTiltOffset + 12);
             AddDefaultVal(obj + battleCamOffset + camTiltOffset + 228);
             AddDefaultVal(obj + battleCamOffset + camMaxOffset);
             AddDefaultVal(obj + battleCamOffset + camMaxOffset + 60);
