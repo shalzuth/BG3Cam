@@ -28,4 +28,5 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: BG3Cam/bin/Release/net7.0-windows/publish/win-x64/BG3Cam.exe
+        tagname: alpha
 
