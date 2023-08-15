@@ -24,6 +24,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        file: "BG3Cam/BG3Cam/bin/Release/net7.0-windows/publish/win-x64/BG3Cam.exe"
+        file: "BG3Cam/bin/Release/net7.0-windows/publish/win-x64/BG3Cam.exe"
         overwrite: true
 
