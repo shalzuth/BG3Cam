@@ -56,24 +56,7 @@ namespace BG3Cam
 
             var camTilt = mem.FindPattern("C3 F3 0F 10 80 ? ? ? ? F3 0F 10 88 ? ? ? ? 0F 14 C8 66 48 0F 7E C8 C3");
             camTiltOffset = mem.ReadProcessMemory<int>(camTilt + 5);
-
-            /*
-            var camTiltSpeed = mem.FindPattern("F3 0F 10 96 F0", bytes: camFuncBytes);
-            //var camTiltSpeed = mem.FindPattern("E8 76 01 02 ?", bytes: camFuncBytes);
-            //var camTiltSpeed = mem.FindPattern("F3 0F 59 4B 5C", bytes: camFuncBytes);
-            camTiltSpeedOffset = camFuncBytes[camTiltSpeed];
-            //camTiltSpeedOffset = (int)mem.ReadProcessMemory<float>(camTilt);
-            */
-
-            /*
-            TO ADD
-            Tactical Adjustment Boxes
-            Combat Adjustments
-            Disable Combat Zoom
-            Version Checker *maybe uneeded
-            Saving of Settings
-            */
-
+            
             var curMaxZoom = AddDefaultVal(obj + worldCamOffset + camMaxOffset); // default val is 12, addr offset is 0x7b4 in release patch
             if (curMaxZoom != 12)
             {
@@ -109,24 +92,10 @@ namespace BG3Cam
             AddDefaultVal(obj + battleCamOffset + camMaxOffset + 164);
             AddDefaultVal(obj + battleCamOffset + camMaxOffset + 172);
             AddDefaultVal(obj + battleCamOffset + camMaxOffset + 200);
-
             mem.WriteProcessMemory(obj + worldCamOffset + camMaxAbsOffset, 1000.0f);
             mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset, curTilt);
             mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 4, curTilt);
             ChangePitchOnMouseMove();
-            /*Debug.WriteLine($"Camera Tilt Speed: {camTiltSpeedOffset}");
-            //mem.WriteProcessMemory(obj + worldCamOffset + camTiltSpeedOffset + 240, (float)panSpeedVal.Value);
-            Debug.WriteLine($"15: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 60)}"); //cam height
-            Debug.WriteLine($"1: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 92)}"); //fov close
-            Debug.WriteLine($"1: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 96)}"); //fove far
-            Debug.WriteLine($"8: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 132)}"); //zoom speed or something
-            Debug.WriteLine($"9: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 136)}"); //scroll speed
-            Debug.WriteLine($"15: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 160)}"); //tact min
-            Debug.WriteLine($"16: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 164)}"); //tact max
-            Debug.WriteLine($"18: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 172)}"); //cam distance
-            Debug.WriteLine($"18: {AddDefaultVal(obj + worldCamOffset + camMaxOffset + 200)}"); //pan speed
-            */
-
         }
         bool running = true;
         float AddDefaultVal(nint addr)
