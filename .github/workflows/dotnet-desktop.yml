@@ -19,3 +19,11 @@ jobs:
       run: msbuild BG3Cam.sln /t:Restore /p:Configuration=Release
     - name: Build
       run: dotnet publish -c Release /p:PublishDir=bin\Release\net7.0-windows\publish\win-x64\ /p:SelfContained=false /p:PublishSingleFile=true
+    - name: Upload To Github Release
+      uses: xresloader/upload-to-github-release@v1.3.12
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        file: "BG3Cam/BG3Cam/bin/Release/net7.0-windows/publish/win-x64/BG3Cam.exe"
+        overwrite: true
+
