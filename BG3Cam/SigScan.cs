@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -14,12 +14,18 @@ namespace BG3Cam
         [DllImport("kernel32")] private static extern bool ReadProcessMemory(nint hProcess, nint lpBaseAddress, [Out()] byte[] lpBuffer, int dwSize, out int lpNumberOfBytesRead);
         byte[] cache;
         Process proc;
+        private nint processHandle;
         public Memory(Process proc)
         {
             this.proc = proc;
             var size = proc.MainModule.ModuleMemorySize;
             cache = new byte[size];
             ReadProcessMemory(proc.Handle, proc.MainModule.BaseAddress, cache, size, out _);
+            processHandle = proc.Handle;
+        }
+        public nint GetProcessHandle()
+        {
+            return processHandle;
         }
         public T ReadProcessMemory<T>(nint addr)
         {
@@ -45,6 +51,15 @@ namespace BG3Cam
             Marshal.Copy(objPtr, objBytes, 0, objSize);
             Marshal.FreeHGlobal(objPtr);
             WriteProcessMemory(proc.Handle, addr, objBytes, objBytes.Length, out _);
+        }
+        public void WriteProcessMemory(IntPtr addr, byte[] buffer)
+        {
+            int bytesWritten;
+            if (!WriteProcessMemory(processHandle, addr, buffer, buffer.Length, out bytesWritten))
+            {
+                // Handle the error here if needed
+                Debug.WriteLine("Error writing to process memory.");
+            }
         }
         static bool MaskCheck(int nOffset, byte[] btPattern, string strMask, byte[] bytes)
         {
