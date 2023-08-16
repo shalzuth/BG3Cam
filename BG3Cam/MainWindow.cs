@@ -79,7 +79,7 @@ namespace BG3Cam
             fovVal.Value = (decimal)65f; //do both fovs + combat fovs
             scrollSpeedVal.Value = (decimal)0.8f;
             cameraDistanceVal.Value = (decimal)100f;
-            cameraHeightVal.Value = (decimal)0.0008d;
+            cameraHeightVal.Value = (decimal)0.00085d;
             tacticalZoomMaxVal.Value = (decimal)100f;
             tacticalZoomMinVal.Value = (decimal)10f;
 

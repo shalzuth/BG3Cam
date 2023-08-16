@@ -220,14 +220,14 @@ namespace BG3Cam
             // 
             // cameraHeightVal
             // 
-            cameraHeightVal.DecimalPlaces = 4;
+            cameraHeightVal.DecimalPlaces = 5;
             cameraHeightVal.Increment = new decimal(new int[] { 2, 0, 0, 262144 });
             cameraHeightVal.Location = new Point(131, 248);
-            cameraHeightVal.Minimum = new decimal(new int[] { 8, 0, 0, 262144 });
+            cameraHeightVal.Minimum = new decimal(new int[] { 85, 0, 0, 327680 });
             cameraHeightVal.Name = "cameraHeightVal";
             cameraHeightVal.Size = new Size(120, 23);
             cameraHeightVal.TabIndex = 17;
-            cameraHeightVal.Value = new decimal(new int[] { 8, 0, 0, 262144 });
+            cameraHeightVal.Value = new decimal(new int[] { 85, 0, 0, 327680 });
             cameraHeightVal.ValueChanged += cameraHeightVal_ValueChanged;
             // 
             // tacticalZoomMaxVal
