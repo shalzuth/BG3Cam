@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using SharpDX.XInput;
 
 namespace BG3Cam
@@ -17,6 +18,8 @@ namespace BG3Cam
         int camMaxAbsOffset;
         int camTiltOffset;
         int camTiltSpeedOffset;
+        int combatZoomOutAddr;
+        int combatZoomInAddr;
         Dictionary<nint, float> defaultVals = new Dictionary<nint, float>();
         int prevMouseY;
         float curTilt;
@@ -56,7 +59,13 @@ namespace BG3Cam
 
             var camTilt = mem.FindPattern("C3 F3 0F 10 80 ? ? ? ? F3 0F 10 88 ? ? ? ? 0F 14 C8 66 48 0F 7E C8 C3");
             camTiltOffset = mem.ReadProcessMemory<int>(camTilt + 5);
-            
+
+            var combatZoomOut = mem.FindPattern("F3 45 0F 11 4C 24 5C");
+            combatZoomOutAddr = mem.ReadProcessMemory<int>(combatZoomOut);
+
+            var combatZoomIn = mem.FindPattern("F3 0F 11 70 5C 0F 28 74 24 20");
+            combatZoomOutAddr = mem.ReadProcessMemory<int>(combatZoomIn);
+
             var curMaxZoom = AddDefaultVal(obj + worldCamOffset + camMaxOffset); // default val is 12, addr offset is 0x7b4 in release patch
             if (curMaxZoom != 12)
             {
@@ -66,14 +75,16 @@ namespace BG3Cam
             }
             maxZoomVal.Value = (decimal)24f;
             minZoomVal.Value = (decimal)0.5f;
-            panSpeedVal.Value = (decimal)30f;
-            fovVal.Value = (decimal)55f; //do fov together
-            scrollSpeedVal.Value = (decimal)(float)0.8f;
-            cameraDistanceVal.Value = (decimal)50f;
+            panSpeedVal.Value = (decimal)100f;
+            fovVal.Value = (decimal)65f; //do both fovs + combat fovs
+            scrollSpeedVal.Value = (decimal)0.8f;
+            cameraDistanceVal.Value = (decimal)100f;
+            cameraHeightVal.Value = (decimal)0.0008d;
+            tacticalZoomMaxVal.Value = (decimal)100f;
+            tacticalZoomMinVal.Value = (decimal)10f;
 
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 4);
             curTilt = AddDefaultVal(obj + worldCamOffset + camTiltOffset);
+            AddDefaultVal(obj + worldCamOffset + camTiltOffset);
             AddDefaultVal(obj + worldCamOffset + camTiltOffset + 4);
             AddDefaultVal(obj + worldCamOffset + camTiltOffset + 8);
             AddDefaultVal(obj + worldCamOffset + camTiltOffset + 12);
@@ -81,22 +92,36 @@ namespace BG3Cam
             AddDefaultVal(obj + battleCamOffset + camTiltOffset + 4);
             AddDefaultVal(obj + battleCamOffset + camTiltOffset + 8);
             AddDefaultVal(obj + battleCamOffset + camTiltOffset + 12);
-            AddDefaultVal(obj + battleCamOffset + camTiltOffset + 228);
+
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset);
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 60); // cam height
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 92); //fov close
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 96); //fov far
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 132); //zoom steps
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 136); //scroll speed
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 160); //tact min
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 164); //tact max
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 172); //cam distance
+            AddDefaultVal(obj + worldCamOffset + camMaxOffset + 200); //tilt speed2
+
+            //combat offsets, done at the same time as the regular ones
             AddDefaultVal(obj + battleCamOffset + camMaxOffset);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 60);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 92);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 96);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 132);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 136);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 160);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 164);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 172);
-            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 200);
-            mem.WriteProcessMemory(obj + worldCamOffset + camMaxAbsOffset, 1000.0f);
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 4);
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 60); // cam height
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 92); //fov close
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 96); //fov far
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 132); //zoom steps
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 136); //scroll speed
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 160); //tact min
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 164); //tact max
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 172); //cam distance
+            AddDefaultVal(obj + battleCamOffset + camMaxOffset + 200); //tilt speed
+
             mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset, curTilt);
             mem.WriteProcessMemory(obj + worldCamOffset + camTiltOffset + 4, curTilt);
             ChangePitchOnMouseMove();
         }
+
         bool running = true;
         float AddDefaultVal(nint addr)
         {
@@ -108,8 +133,47 @@ namespace BG3Cam
             running = false;
             foreach (var val in defaultVals) mem.WriteProcessMemory(val.Key, val.Value);
         }
+        void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            string pattern = "F3 45 0F 11 4C 24 5C";
+            string pattern2 = "F3 0F 11 70 5C";
+            List<nint> foundAddresses = mem.FindPatterns(pattern);
+            List<nint> foundAddresses2 = mem.FindPatterns(pattern2);
 
-        //writes to memory 
+            if (checkBox1.CheckState == CheckState.Checked)
+            {
+                byte[] nopBytes = new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }; // NOP instruction
+                byte[] nopBytes2 = new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 };
+                for (int i = 0; i < 1; i++)
+                {
+                    nint address = foundAddresses[i];
+                    Debug.WriteLine($"Pattern found at address: 0x{address.ToString("X")}");
+                    ReplaceBytes(address, nopBytes);
+                    nint address2 = foundAddresses2[i];
+                    Debug.WriteLine($"Pattern found at address: 0x{address2.ToString("X")}");
+                    ReplaceBytes(address, nopBytes2);
+                }
+
+            }
+            if (checkBox1.CheckState == CheckState.Unchecked)
+            {
+                for (int i = 0; i < 1; i++)
+                {
+                    byte[] original = new byte[] { 0xF3, 0x45, 0x0F, 0x11, 0x4C, 0x24, 0x5C };
+                    byte[] original2 = new byte[] { 0xF3, 0x0F, 0x11, 0x70, 0x5C };
+                    nint address = foundAddresses[i];
+                    Debug.WriteLine($"Pattern found at address: 0x{address.ToString("X")}");
+                    ReplaceBytes(address, original);
+                    nint address2 = foundAddresses2[i];
+                    Debug.WriteLine($"Pattern found at address: 0x{address2.ToString("X")}");
+                    ReplaceBytes(address, original);
+                }
+            }
+        }
+        void ReplaceBytes(nint address, byte[] newBytes)
+        {
+            mem.WriteProcessMemory(address, newBytes);
+        }
         void maxZoomVal_ValueChanged(object sender, EventArgs e)
         {
             mem.WriteProcessMemory(obj + worldCamOffset + camMaxOffset, (float)maxZoomVal.Value);
@@ -128,16 +192,36 @@ namespace BG3Cam
         {
             mem.WriteProcessMemory(obj + worldCamOffset + camMaxOffset + 92, (float)fovVal.Value);
             mem.WriteProcessMemory(obj + worldCamOffset + camMaxOffset + 96, (float)fovVal.Value);
+            mem.WriteProcessMemory(obj + battleCamOffset + camMaxOffset + 92, (float)fovVal.Value);
+            mem.WriteProcessMemory(obj + battleCamOffset + camMaxOffset + 96, (float)fovVal.Value);
         }
 
         void scrollSpeedVal_ValueChanged(object sender, EventArgs e)
         {
             mem.WriteProcessMemory(obj + worldCamOffset + camMaxOffset + 136, (float)scrollSpeedVal.Value);
+            mem.WriteProcessMemory(obj + battleCamOffset + camMaxOffset + 136, (float)scrollSpeedVal.Value);
         }
 
         void cameraDistanceVal_ValueChanged(object sender, EventArgs e)
         {
             mem.WriteProcessMemory(obj + worldCamOffset + camMaxOffset + 172, (float)cameraDistanceVal.Value);
+            mem.WriteProcessMemory(obj + battleCamOffset + camMaxOffset + 172, (float)cameraDistanceVal.Value);
+        }
+        void cameraHeightVal_ValueChanged(object sender, EventArgs e)
+        {
+            mem.WriteProcessMemory(obj + worldCamOffset + camMaxOffset + 60, (double)cameraHeightVal.Value);
+            mem.WriteProcessMemory(obj + battleCamOffset + camMaxOffset + 60, (double)cameraHeightVal.Value);
+
+        }
+        private void tacticalZoomVal_ValueChanged(object sender, EventArgs e)
+        {
+            mem.WriteProcessMemory(obj + worldCamOffset + camMaxAbsOffset, (float)tacticalZoomMaxVal.Value);
+            mem.WriteProcessMemory(obj + battleCamOffset + camMaxAbsOffset, (float)tacticalZoomMaxVal.Value);
+        }
+        private void tacticalZoomMinVal_ValueChanged(object sender, EventArgs e)
+        {
+            mem.WriteProcessMemory(obj + worldCamOffset + camMaxAbsOffset - 4, (float)tacticalZoomMinVal.Value);
+            mem.WriteProcessMemory(obj + battleCamOffset + camMaxAbsOffset - 4, (float)tacticalZoomMinVal.Value);
         }
 
         //camera tilt from mouse
@@ -192,5 +276,8 @@ namespace BG3Cam
                 await Task.Delay(16);
             }
         }
+
     }
 }
+
+
